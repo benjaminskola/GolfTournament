@@ -1,0 +1,137 @@
+using System;
+using System.Collections.Generic;
+//gör det lättare att arbeta med samlingar av data (som listor, arrayer och andra typer av IEnumerable).
+using System.Linq;
+//så vi kan använda oss av exempelvis Thread.Sleep();
+using System.Threading;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        // StartMeny
+        bool StartMeny = true;
+
+        Console.WriteLine("Välkommen Till Benjamins MiniGolf Tracker");
+        Console.WriteLine();
+
+        while (StartMeny)
+        {
+            // Blinkade Instruktion (Enter: Gå Vidare)
+            Thread.Sleep(400);
+            Console.WriteLine("Enter: Gå Vidare");
+            Thread.Sleep(700);
+            Console.SetCursorPosition(0, Console.CursorTop - 1);
+            TaBortNuvarandeText();
+
+            // Kontrollera om användaren trycker på Enter
+            if (Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Enter)
+            {
+                StartMeny = false;
+            }
+        }
+
+        // SpelDetaljer
+        Console.Clear();
+        Console.WriteLine("Hur många banor spelar ni på?");
+        int AntalBanor = int.Parse(Console.ReadLine());
+        Console.WriteLine("Hur många spelare?");
+        int AntalSpelare = int.Parse(Console.ReadLine());
+
+        // Lista för att lagra spelare och deras resultat
+        List<Player> players = new List<Player>();
+
+        // Samla in information om varje spelare
+        for (int i = 0; i < AntalSpelare; i++)
+        {
+            Console.Clear(); // Rensa skärmen för varje spelare
+            Console.WriteLine($"Skriv in namn för spelare {i + 1}:");
+            string playerName = Console.ReadLine();
+
+            // Kontrollera att namnet inte är längre än 9 bokstäver
+            if (playerName.Length > 9)
+            {
+                playerName = playerName.Substring(0, 9); // stoppar namnet från att vara över 9 tecken.
+                Console.WriteLine("Namnet var för långt och har kapats till 9 bokstäver.");
+                Thread.Sleep(1000); // Vänta en stund innan nästa inmatning
+            }
+
+            List<int> playerScores = new List<int>();
+
+            for (int j = 0; j < AntalBanor; j++)
+            {
+                Console.Clear(); // Rensa skärmen efter varje bana
+                Console.WriteLine($"Hur många slag tog {playerName} på bana {j + 1}?");
+                playerScores.Add(int.Parse(Console.ReadLine()));
+            }
+
+            // Lägg till spelaren i listan
+            players.Add(new Player(playerName, playerScores));
+        }
+
+        // Beräkna median för varje spelare och sortera efter totala slag
+        var sortedPlayers = players
+            .Select(p => new
+            {
+                PlayerName = p.Name,
+                TotalScore = p.Scores.Sum(),
+                MedianScore = GetMedian(p.Scores),
+                Scores = p.Scores
+            })
+            .OrderBy(p => p.TotalScore) // Sortera efter total slag, lägsta först
+            .ToList();
+
+        // Visa resultaten
+        Console.Clear(); // Rensa skärmen innan resultaten
+        Console.WriteLine("\nResultat:");
+        Console.WriteLine("==========================================================================");
+        Console.WriteLine("Spelare   \tTotala slag\tMedian Slag per Bana");
+
+        foreach (var player in sortedPlayers)
+        {
+            // Formatera utskriften så att poängen inte rör sig beroende på namn
+            Console.WriteLine($"{player.PlayerName.PadRight(9)}\t{player.TotalScore.ToString().PadLeft(12)}\t{player.MedianScore.ToString("0.0").PadLeft(19)}");
+        }
+    }
+
+    // Funktion för att beräkna medianvärdet för en lista
+    static double GetMedian(List<int> scores)
+    {
+        var sortedScores = scores.OrderBy(score => score).ToList();
+        int count = sortedScores.Count;
+
+        if (count % 2 == 0)
+        {
+            // Om det är ett jämnt antal, ta medelvärdet av de två mittersta elementen
+            return (sortedScores[count / 2 - 1] + sortedScores[count / 2]) / 2.0;
+        }
+        else
+        {
+            // Om det är ett udda antal, ta mittvärdet
+            return sortedScores[count / 2];
+        }
+    }
+
+    // Klass för att lagra spelarinformation
+    class Player
+    {
+        public string Name { get; set; }
+        public List<int> Scores { get; set; }
+
+        public Player(string name, List<int> scores)
+        {
+            Name = name;
+            Scores = scores;
+        }
+    }
+
+    //använder vid blinkande effekt i början
+    static void TaBortNuvarandeText()
+    {
+        int currentLineCursor = Console.CursorTop;
+        Console.SetCursorPosition(0, Console.CursorTop);
+        Console.Write(new string(' ', Console.WindowWidth));
+        Console.SetCursorPosition(0, currentLineCursor);
+    }
+}
+
