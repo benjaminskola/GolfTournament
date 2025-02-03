@@ -1,0 +1,45 @@
+using System;
+using System.Threading;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        // StartMeny
+        bool StartMeny = true;
+
+        Console.WriteLine("Välkommen Till Benjamins MiniGolf Tracker");
+        Console.WriteLine();
+
+        while (StartMeny)
+        {
+            // Blinkade Instruktion (Enter: Gå Vidare)
+            Thread.Sleep(400);
+            Console.WriteLine("Enter: Gå Vidare");
+            Thread.Sleep(700);
+            Console.SetCursorPosition(0, Console.CursorTop - 1);
+            TaBortNuvarandeText();
+
+            // Kontrollera om användaren trycker på Enter
+            if (Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Enter)
+            {
+                StartMeny = false;
+            }
+        }
+
+        // SpelDetaljer
+        Console.Clear();
+        Console.WriteLine("Hur många banor spelar ni på?");
+        int AntalBanor = int.Parse(Console.ReadLine());
+        Console.WriteLine("Hur många spelare?");
+        int AntalSpelare = int.Parse(Console.ReadLine());
+    }
+
+    static void TaBortNuvarandeText()
+    {
+        int currentLineCursor = Console.CursorTop;
+        Console.SetCursorPosition(0, Console.CursorTop);
+        Console.Write(new string(' ', Console.WindowWidth));
+        Console.SetCursorPosition(0, currentLineCursor);
+    }
+}
