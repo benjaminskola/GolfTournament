@@ -1,0 +1,538 @@
+using System;
+//kunna använda listor
+using System.Collections.Generic;
+//hantera listor bettre 
+using System.Linq;
+//spara tävlingar
+using System.IO;
+using System.Threading;
+
+class Program
+{
+    static string filePath = "tavlingar.txt";  // Filen där tävlingarna sparas
+
+    static void Main(string[] args)
+    {
+        bool startMeny = true;
+
+        while (startMeny)
+        {
+            VisaHuvudMeny();
+            string val = Console.ReadLine();
+
+            switch (val)
+            {
+                case "1":
+                    NyTävling(); // Starta en ny tävling
+                    break;
+                case "2":
+                    VisaTidigareTävlingar(); // Visa tidigare tävlingar
+                    break;
+                case "0":
+                    startMeny = false; // Avsluta programmet
+                    Console.WriteLine("Programmet avslutas. Välkommen åter!");
+                    Thread.Sleep(1500); // Ge användaren tid att läsa meddelandet
+                    break;
+                default:
+                    Console.WriteLine("Ogiltigt val. Försök igen.");
+                    Thread.Sleep(1000);
+                    break;
+            }
+        }
+    }
+
+    // Funktion för att visa programmets huvudmeny
+    static void VisaHuvudMeny()
+    {
+        Console.Clear();
+        Console.WriteLine("╔══════════════════════════════════════╗");
+        Console.WriteLine("║  BENJAMINS MINIGOLF TRACKER          ║");
+        Console.WriteLine("╠══════════════════════════════════════╣");
+        Console.WriteLine("║  1: Ny tävling                       ║");
+        Console.WriteLine("║  2: Visa tidigare tävlingar          ║");
+        Console.WriteLine("║  0: Avsluta                          ║");
+        Console.WriteLine("╚══════════════════════════════════════╝");
+        Console.Write("Ditt val: ");
+    }
+
+    // Funktion för att skapa en ny tävling
+    static void NyTävling()
+    {
+        Console.Clear();
+        Console.WriteLine("╔══════════════════════════════════════╗");
+        Console.WriteLine("║  SKAPA NY TÄVLING                    ║");
+        Console.WriteLine("╚══════════════════════════════════════╝");
+
+        // Namn på tävlingen
+        Console.WriteLine("Skriv in ett namn för tävlingen (eller 0 för att återgå till huvudmenyn):");
+        string tavelingNamn = Console.ReadLine();
+
+        // Möjlighet att avbryta och återgå till huvudmenyn
+        if (tavelingNamn == "0")
+        {
+            return;
+        }
+
+        // Kontrollera att tävlingsnamn inte är tomt
+        while (string.IsNullOrWhiteSpace(tavelingNamn))
+        {
+            Console.WriteLine("Tävlingsnamn kan inte vara tomt. Försök igen (eller 0 för att återgå):");
+            tavelingNamn = Console.ReadLine();
+            if (tavelingNamn == "0")
+            {
+                return;
+            }
+        }
+
+        // Felhantering för antal banor
+        int antalBanor;
+        while (true)
+        {
+            Console.WriteLine("Hur många banor spelar ni på? (eller 0 för att återgå)");
+            string input = Console.ReadLine();
+
+            if (input == "0")
+            {
+                return;
+            }
+
+            if (int.TryParse(input, out antalBanor) && antalBanor > 0)
+            {
+                break;
+            }
+            Console.WriteLine("Ogiltigt värde. Ange ett positivt heltal.");
+        }
+
+        // Felhantering för antal spelare
+        int antalSpelare;
+        while (true)
+        {
+            Console.WriteLine("Hur många spelare? (eller 0 för att återgå)");
+            string input = Console.ReadLine();
+
+            if (input == "0")
+            {
+                return;
+            }
+
+            if (int.TryParse(input, out antalSpelare) && antalSpelare > 0)
+            {
+                break;
+            }
+            Console.WriteLine("Ogiltigt värde. Ange ett positivt heltal.");
+        }
+
+        // Lista för att lagra spelare och deras resultat
+        List<Player> players = new List<Player>();
+
+        // Samla in information om varje spelare
+        for (int i = 0; i < antalSpelare; i++)
+        {
+            Console.Clear(); // Rensa skärmen för varje spelare
+            Console.WriteLine($"╔══════════════════════════════════════╗");
+            Console.WriteLine($"║  SPELARE {i + 1} / {antalSpelare}    " + new string(' ', 23 - $"SPELARE {i + 1} / {antalSpelare}".Length) + "║");
+            Console.WriteLine($"╚══════════════════════════════════════╝");
+
+            Console.WriteLine("Skriv in namn för spelaren (eller 'back' för att gå tillbaka):");
+            string playerName = Console.ReadLine();
+
+            // Möjlighet att gå tillbaka till föregående steg
+            if (playerName.ToLower() == "back")
+            {
+                if (i > 0)
+                {
+                    i -= 2; // Gå tillbaka till föregående spelare (minus 2 eftersom loopen kommer att öka i med 1)
+                    players.RemoveAt(players.Count - 1); // Ta bort föregående spelare från listan
+                    continue;
+                }
+                else
+                {
+                    // Om vi är på första spelaren, ge möjlighet att avbryta helt
+                    Console.WriteLine("Vill du avbryta skapandet av tävlingen? (j/n)");
+                    if (Console.ReadLine().ToLower().StartsWith("j"))
+                    {
+                        return; // Återgå till huvudmenyn
+                    }
+                    i--; // Stanna kvar på första spelaren
+                    continue;
+                }
+            }
+
+            // Kontrollera att namnet inte är tomt
+            while (string.IsNullOrWhiteSpace(playerName))
+            {
+                Console.WriteLine("Spelarnamn kan inte vara tomt. Försök igen (eller 'back' för att gå tillbaka):");
+                playerName = Console.ReadLine();
+
+                if (playerName.ToLower() == "back")
+                {
+                    if (i > 0)
+                    {
+                        i -= 2;
+                        players.RemoveAt(players.Count - 1);
+                        continue;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Vill du avbryta skapandet av tävlingen? (j/n)");
+                        if (Console.ReadLine().ToLower().StartsWith("j"))
+                        {
+                            return;
+                        }
+                        i--;
+                        continue;
+                    }
+                }
+            }
+
+            // Kontrollera att namnet inte är längre än 9 bokstäver
+            if (playerName.Length > 9)
+            {
+                playerName = playerName.Substring(0, 9); // stoppar namnet från att vara över 9 tecken.
+                Console.WriteLine("Namnet var för långt och har kapats till 9 bokstäver.");
+                Thread.Sleep(1000); // Vänta en stund innan nästa inmatning
+            }
+
+            List<int> playerScores = new List<int>();
+
+            // Samla resultat för varje bana
+            for (int j = 0; j < antalBanor; j++)
+            {
+                Console.Clear(); // Rensa skärmen efter varje bana
+                Console.WriteLine($"╔══════════════════════════════════════╗");
+                Console.WriteLine($"║  SPELARE: {playerName.PadRight(9)}   BANA: {j + 1}/{antalBanor}  ║");
+                Console.WriteLine($"╚══════════════════════════════════════╝");
+
+                // Visa tidigare resultat om det finns några
+                if (playerScores.Count > 0)
+                {
+                    Console.WriteLine("\nTidigare resultat:");
+                    for (int k = 0; k < playerScores.Count; k++)
+                    {
+                        Console.WriteLine($"Bana {k + 1}: {playerScores[k]} slag");
+                    }
+                    Console.WriteLine();
+                }
+
+                // Felhantering för spelarens slag
+                int slag;
+                while (true)
+                {
+                    Console.WriteLine($"Hur många slag tog {playerName} på bana {j + 1}? (eller 'back' för att gå tillbaka)");
+                    string input = Console.ReadLine();
+
+                    // Möjlighet att gå tillbaka till föregående bana
+                    if (input.ToLower() == "back")
+                    {
+                        if (j > 0)
+                        {
+                            j -= 2; // Gå tillbaka till föregående bana
+                            playerScores.RemoveAt(playerScores.Count - 1); // Ta bort föregående resultat
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Vill du gå tillbaka till spelarnamn? (j/n)");
+                            if (Console.ReadLine().ToLower().StartsWith("j"))
+                            {
+                                j = -1; // Avbryt inmatning av resultat och gå tillbaka till spelarnamn
+                                playerScores.Clear();
+                                i--; // Gå tillbaka till nuvarande spelare
+                                break;
+                            }
+                            continue;
+                        }
+                    }
+
+                    if (int.TryParse(input, out slag) && slag > 0)
+                    {
+                        playerScores.Add(slag);
+                        break;
+                    }
+                    Console.WriteLine("Ogiltigt värde. Ange ett positivt heltal.");
+                }
+
+                // Om vi avbröt inmatningen av resultat för att gå tillbaka till spelarnamn
+                if (j == -1)
+                {
+                    break;
+                }
+            }
+
+            // Om vi har fyllt i resultat för alla banor, lägg till spelaren
+            if (playerScores.Count == antalBanor)
+            {
+                players.Add(new Player(playerName, playerScores));
+            }
+            else
+            {
+                // Om inte alla banor är ifyllda, gå tillbaka till samma spelare
+                i--;
+            }
+        }
+
+        // Om inga spelare registrerades, avbryt och återgå till huvudmenyn
+        if (players.Count == 0)
+        {
+            Console.WriteLine("Inga spelare registrerades. Återgår till huvudmenyn...");
+            Thread.Sleep(1500);
+            return;
+        }
+
+        // Beräkna median för varje spelare och sortera efter totala slag
+        var sortedPlayers = players
+            .Select(p => new PlayerResult
+            {
+                PlayerName = p.Name,
+                TotalScore = p.Scores.Sum(),
+                MedianScore = GetMedian(p.Scores)
+            })
+            .OrderBy(p => p.TotalScore) // Sortera efter total slag, lägsta först
+            .ToList();
+
+        // Visa resultaten
+        Console.Clear(); // Rensa skärmen innan resultaten
+        Console.WriteLine("╔══════════════════════════════════════════════════════════╗");
+        Console.WriteLine("║                       RESULTAT                           ║");
+        Console.WriteLine("╠══════════════════════════════════════════════════════════╣");
+        Console.WriteLine("║  Spelare   │  Totala slag  │  Median Slag per Bana      ║");
+        Console.WriteLine("╠════════════╪════════════════╪═══════════════════════════╣");
+
+        foreach (var player in sortedPlayers)
+        {
+            // Formatera utskriften så att poängen inte rör sig beroende på namn
+            Console.WriteLine($"║  {player.PlayerName.PadRight(9)} │  {player.TotalScore.ToString().PadLeft(12)}  │  {player.MedianScore.ToString("0.0").PadLeft(19)}      ║");
+        }
+
+        Console.WriteLine("╚════════════╧════════════════╧═══════════════════════════╝");
+
+        // Spara resultaten till fil med tävlingsnamn
+        SparaTavling(tavelingNamn, sortedPlayers);
+
+        Console.WriteLine("\nTävlingen har avslutats.");
+        Console.WriteLine("Tryck på en tangent för att gå tillbaka till huvudmenyn...");
+        Console.ReadKey();
+    }
+
+    // Funktion för att beräkna medianvärdet för en lista
+    static double GetMedian(List<int> scores)
+    {
+        var sortedScores = scores.OrderBy(score => score).ToList();
+        int count = sortedScores.Count;
+
+        if (count % 2 == 0)
+        {
+            // Om det är ett jämnt antal, ta medelvärdet av de två mittersta elementen
+            return (sortedScores[count / 2 - 1] + sortedScores[count / 2]) / 2.0;
+        }
+        else
+        {
+            // Om det är ett udda antal, ta mittvärdet
+            return sortedScores[count / 2];
+        }
+    }
+
+    // Klass för att lagra spelarinformation
+    class Player
+    {
+        public string Name { get; set; }
+        public List<int> Scores { get; set; }
+
+        public Player(string name, List<int> scores)
+        {
+            Name = name;
+            Scores = scores;
+        }
+    }
+
+    // Klass för att lagra resultatet från en tävling
+    class PlayerResult
+    {
+        public string PlayerName { get; set; }
+        public int TotalScore { get; set; }
+        public double MedianScore { get; set; }
+    }
+
+    // Funktion för att spara tävlingen till en textfil
+    static void SparaTavling(string tavelingNamn, List<PlayerResult> players)
+    {
+        try
+        {
+            using (StreamWriter sw = new StreamWriter(filePath, true))
+            {
+                sw.WriteLine("------------------------------------------------------------------");
+                sw.WriteLine($"Tävling: {tavelingNamn} ({DateTime.Now})");
+                foreach (var player in players)
+                {
+                    sw.WriteLine($"Spelare: {player.PlayerName}, Totala slag: {player.TotalScore}, Median slag: {player.MedianScore}");
+                }
+                sw.WriteLine("------------------------------------------------------------------");
+            }
+            Console.WriteLine("Tävlingen har sparats.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ett fel uppstod när tävlingen skulle sparas: {ex.Message}");
+            Console.WriteLine("Tryck på en tangent för att fortsätta...");
+            Console.ReadKey();
+        }
+    }
+
+    // Funktion för att visa tidigare tävlingar från filen
+    static void VisaTidigareTävlingar()
+    {
+        Console.Clear();
+        Console.WriteLine("╔══════════════════════════════════════╗");
+        Console.WriteLine("║  TIDIGARE TÄVLINGAR                  ║");
+        Console.WriteLine("╚══════════════════════════════════════╝");
+
+        try
+        {
+            if (File.Exists(filePath))
+            {
+                string[] lines = File.ReadAllLines(filePath);
+
+                if (lines.Length == 0)
+                {
+                    Console.WriteLine("Filen finns men innehåller inga tävlingar.");
+                    Console.WriteLine("\nTryck på en tangent för att gå tillbaka...");
+                    Console.ReadKey();
+                    return;
+                }
+
+                List<string> tavlingar = new List<string>();
+
+                // Samla alla tävlingsnamn
+                foreach (var line in lines)
+                {
+                    if (line.StartsWith("Tävling:"))
+                    {
+                        var tavelingNamn = line.Split(':')[1].Split('(')[0].Trim();
+                        tavlingar.Add(tavelingNamn);
+                    }
+                }
+
+                if (tavlingar.Count == 0)
+                {
+                    Console.WriteLine("Inga tävlingar hittades i filen.");
+                    Console.WriteLine("\nTryck på en tangent för att gå tillbaka...");
+                    Console.ReadKey();
+                    return;
+                }
+
+                // Visa tävlingsnamn med numrering
+                for (int i = 0; i < tavlingar.Count; i++)
+                {
+                    Console.WriteLine($"{i + 1}. {tavlingar[i]}");
+                }
+
+                // Navigeringsalternativ
+                Console.WriteLine("\nVälj en tävling (ange nummer) för att se resultaten");
+                Console.WriteLine("eller skriv '0' för att gå tillbaka till huvudmenyn:");
+
+                int val;
+                while (true)
+                {
+                    string input = Console.ReadLine();
+
+                    // Gå tillbaka till huvudmenyn
+                    if (input == "0")
+                    {
+                        return;
+                    }
+
+                    if (int.TryParse(input, out val) && val > 0 && val <= tavlingar.Count)
+                    {
+                        VisaTävlingResultat(tavlingar[val - 1]);
+
+                        // Efter att ha visat en tävling, gå tillbaka till listan
+                        Console.Clear();
+                        Console.WriteLine("╔══════════════════════════════════════╗");
+                        Console.WriteLine("║  TIDIGARE TÄVLINGAR                  ║");
+                        Console.WriteLine("╚══════════════════════════════════════╝");
+
+                        for (int i = 0; i < tavlingar.Count; i++)
+                        {
+                            Console.WriteLine($"{i + 1}. {tavlingar[i]}");
+                        }
+
+                        Console.WriteLine("\nVälj en tävling (ange nummer) för att se resultaten");
+                        Console.WriteLine("eller skriv '0' för att gå tillbaka till huvudmenyn:");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Ogiltigt val. Försök igen (eller 0 för att gå tillbaka):");
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("Inga tidigare tävlingar hittades. Filen 'tavlingar.txt' existerar inte.");
+                Console.WriteLine("\nTryck på en tangent för att gå tillbaka...");
+                Console.ReadKey();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ett fel uppstod när tidigare tävlingar skulle visas: {ex.Message}");
+            Console.WriteLine("\nTryck på en tangent för att gå tillbaka...");
+            Console.ReadKey();
+        }
+    }
+
+    // Funktion för att visa resultaten för en specifik tävling
+    static void VisaTävlingResultat(string tavelingNamn)
+    {
+        try
+        {
+            string[] lines = File.ReadAllLines(filePath);
+            bool found = false;
+            bool isCurrentTavling = false;
+            List<string> resultLines = new List<string>();
+
+            // Hitta och samla alla rader för den valda tävlingen
+            foreach (var line in lines)
+            {
+                if (line.Contains($"Tävling: {tavelingNamn}"))
+                {
+                    isCurrentTavling = true;
+                    found = true;
+                    resultLines.Add(line);
+                }
+                else if (isCurrentTavling)
+                {
+                    if (line.StartsWith("Tävling:") || line.StartsWith("------------------------------------------------------------------") && resultLines.Count > 0)
+                    {
+                        break;
+                    }
+                    resultLines.Add(line);
+                }
+            }
+
+            Console.Clear();
+            Console.WriteLine("╔══════════════════════════════════════════════════════════╗");
+            Console.WriteLine($"║  RESULTAT: {tavelingNamn.PadRight(42)}║");
+            Console.WriteLine("╚══════════════════════════════════════════════════════════╝");
+
+            if (found)
+            {
+                // Visa alla resultatrader
+                foreach (var line in resultLines)
+                {
+                    Console.WriteLine(line);
+                }
+            }
+            else
+            {
+                Console.WriteLine("Resultaten för denna tävling kunde inte hittas.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ett fel uppstod när tävlingsresultaten skulle visas: {ex.Message}");
+        }
+
+        Console.WriteLine("\nTryck på en tangent för att gå tillbaka...");
+        Console.ReadKey();
+    }
+}
